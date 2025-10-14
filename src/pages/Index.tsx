@@ -4,6 +4,7 @@ import Gallery from "@/components/Gallery";
 import LiveMedia from "@/components/LiveMedia";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import ChatBot from "@/components/ChatBot";
 
 const Index = () => {
   return (
@@ -14,6 +15,7 @@ const Index = () => {
       <LiveMedia />
       <Contact />
       <Footer />
+      <ChatBot />
     </div>
   );
 };
