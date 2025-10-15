@@ -183,13 +183,47 @@ const Contact = () => {
           </div>
         </div>
 
-        {/* Map Placeholder */}
-        <div className="mt-16 rounded-3xl overflow-hidden border border-border shadow-lg h-96 bg-muted flex items-center justify-center">
-          <div className="text-center">
-            <MapPin className="h-16 w-16 text-primary mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              Carte interactive à venir
-            </p>
+        {/* Interactive Map */}
+        <div className="mt-16 rounded-3xl overflow-hidden border border-border shadow-lg">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3972.457798377395!2d-3.9918!3d5.3597!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNcKwMjEnMzUuMCJOIDPCsDU5JzMwLjUiVw!5e0!3m2!1sfr!2sci!4v1234567890"
+            width="100%"
+            height="450"
+            style={{ border: 0 }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Localisation de l'Église Vases d'Honneur - Cocody 2 Plateaux-Vallons, Abidjan"
+            className="w-full"
+          ></iframe>
+          <div className="bg-card p-6 border-t border-border">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-gradient-divine flex items-center justify-center text-white shadow-divine">
+                <MapPin className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">
+                  Notre Emplacement
+                </h3>
+                <p className="text-muted-foreground mb-1">
+                  Cocody 2 Plateaux-Vallons
+                </p>
+                <p className="text-muted-foreground mb-3">
+                  Non loin de l'école ESIT, Abidjan, Côte d'Ivoire
+                </p>
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Église+Vases+d'Honneur+Cocody+2+Plateaux+Vallons+Abidjan"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-primary hover:text-primary-hover font-medium transition-colors"
+                >
+                  Ouvrir dans Google Maps
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
