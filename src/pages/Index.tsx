@@ -1,6 +1,7 @@
 import Hero from "@/components/Hero";
 import Mission from "@/components/Mission";
 import Gallery from "@/components/Gallery";
+import YouTubeVideos from "@/components/YouTubeVideos";
 import LiveMedia from "@/components/LiveMedia";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
@@ -12,6 +13,7 @@ const Index = () => {
       <Hero />
       <Mission />
       <Gallery />
+      <YouTubeVideos />
       <LiveMedia />
       <Contact />
       <Footer />

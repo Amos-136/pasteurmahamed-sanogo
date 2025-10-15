@@ -43,13 +43,13 @@ const LiveMedia = () => {
     {
       name: "Instagram",
       username: "@vases_dhonneur",
-      link: "https://instagram.com/vases_dhonneur",
+      link: "https://www.instagram.com/vases_dhonneur?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
       icon: "📸"
     },
     {
       name: "YouTube",
       username: "Vases d'Honneur",
-      link: "#",
+      link: "https://www.youtube.com/c/ÉgliseVasesdHonneur",
       icon: "📺"
     }
   ];

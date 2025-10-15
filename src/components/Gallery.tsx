@@ -3,25 +3,24 @@ import churchImage from "@/assets/church-exterior.jpg";
 import eventKodesh from "@/assets/event-kodesh.jpg";
 import eventStadium from "@/assets/event-stadium.jpg";
 import eventRencontre from "@/assets/event-grande-rencontre.jpg";
+import eventGodFirst from "@/assets/event-god-first.jpg";
+import pastorSpeaking from "@/assets/pastor-speaking.jpg";
+import eventSuccothMilan from "@/assets/event-succoth-milan.jpg";
+import pastorOutdoor from "@/assets/pastor-outdoor.jpg";
+import grandeRencontreCrowd from "@/assets/grande-rencontre-crowd.jpg";
+import grandeRencontrePraise from "@/assets/grande-rencontre-praise.jpg";
+import grandeRencontreWorship from "@/assets/grande-rencontre-worship.jpg";
+import grandeRencontreView from "@/assets/grande-rencontre-view.jpg";
+import pastorPreachingOutdoor from "@/assets/pastor-preaching-outdoor.jpg";
+import audienceCloseup from "@/assets/audience-closeup.jpg";
+import pastorPreaching from "@/assets/pastor-preaching.jpg";
 
 const Gallery = () => {
   const images = [
     {
-      src: choirImage,
-      alt: "Chorale gospel en adoration",
-      title: "Adoration",
-      category: "Culte"
-    },
-    {
-      src: churchImage,
-      alt: "Église Vases d'Honneur",
-      title: "Notre Temple",
-      category: "Lieu"
-    },
-    {
-      src: eventKodesh,
-      alt: "Centre KODESH - Entrepreneurs Influents",
-      title: "Centre KODESH",
+      src: eventGodFirst,
+      alt: "Célébration God First - Pasteur Mohammed Sanogo",
+      title: "God First",
       category: "Événement"
     },
     {
@@ -31,10 +30,88 @@ const Gallery = () => {
       category: "Événement Spécial"
     },
     {
+      src: pastorSpeaking,
+      alt: "Pasteur Mohammed Sanogo - La Grande Rencontre",
+      title: "Pasteur Sanogo",
+      category: "Leadership"
+    },
+    {
+      src: pastorPreaching,
+      alt: "Pasteur Mohammed Sanogo en prédication",
+      title: "Message Puissant",
+      category: "Culte"
+    },
+    {
+      src: eventSuccothMilan,
+      alt: "Succoth Milan 2025",
+      title: "Succoth Milan",
+      category: "Événement"
+    },
+    {
+      src: grandeRencontreCrowd,
+      alt: "Grande Rencontre - Foule en adoration",
+      title: "Présence Divine",
+      category: "Adoration"
+    },
+    {
+      src: eventKodesh,
+      alt: "Centre KODESH - Entrepreneurs Influents",
+      title: "Centre KODESH",
+      category: "Événement"
+    },
+    {
+      src: grandeRencontrePraise,
+      alt: "Grande Rencontre - Louange au Stade",
+      title: "Louange Collective",
+      category: "Adoration"
+    },
+    {
+      src: choirImage,
+      alt: "Chorale gospel en adoration",
+      title: "Chorale VDH",
+      category: "Culte"
+    },
+    {
+      src: grandeRencontreWorship,
+      alt: "Grande Rencontre - Adoration au Stade",
+      title: "Adoration Massive",
+      category: "Événement"
+    },
+    {
+      src: pastorOutdoor,
+      alt: "Pasteur Mohammed Sanogo en mission",
+      title: "Mission Divine",
+      category: "Leadership"
+    },
+    {
+      src: grandeRencontreView,
+      alt: "Grande Rencontre - Vue d'ensemble",
+      title: "Grande Rencontre 2024",
+      category: "Événement Spécial"
+    },
+    {
       src: eventRencontre,
       alt: "La Grande Rencontre avec Pasteur Mohammed Sanogo",
-      title: "Rencontre 2024",
+      title: "Rencontre Transformante",
       category: "Événement"
+    },
+    {
+      src: pastorPreachingOutdoor,
+      alt: "Prédication en plein air",
+      title: "Évangélisation",
+      category: "Mission"
+    },
+    {
+      src: audienceCloseup,
+      alt: "Fidèles en adoration",
+      title: "Cœurs Adorateurs",
+      category: "Culte"
+    },
+    {
+      src: churchImage,
+      alt: "Église Vases d'Honneur",
+      title: "Notre Temple",
+      category: "Lieu"
     }
   ];
 
