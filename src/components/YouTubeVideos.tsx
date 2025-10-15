@@ -6,19 +6,19 @@ const YouTubeVideos = () => {
 
   const videos = [
     {
-      id: "UCkVaseVideo1",
-      title: "Culte du Dimanche - Message Puissant",
-      thumbnail: "https://img.youtube.com/vi/PLACEHOLDER/maxresdefault.jpg",
+      id: "OZiuXgK1OW0",
+      title: "Les 7 Applications du Sang de Jésus - Partie 02",
+      thumbnail: "https://img.youtube.com/vi/OZiuXgK1OW0/maxresdefault.jpg",
     },
     {
-      id: "UCkVaseVideo2",
-      title: "Grande Rencontre 2024",
-      thumbnail: "https://img.youtube.com/vi/PLACEHOLDER/maxresdefault.jpg",
+      id: "9ndoUw8eDGc",
+      title: "Les 3 Présences de Dieu - Apôtre Mohammed Sanogo",
+      thumbnail: "https://img.youtube.com/vi/9ndoUw8eDGc/maxresdefault.jpg",
     },
     {
-      id: "UCkVaseVideo3",
-      title: "Succoth Milan - Moments de Gloire",
-      thumbnail: "https://img.youtube.com/vi/PLACEHOLDER/maxresdefault.jpg",
+      id: "9bAVZYrFUw8",
+      title: "Il Est Ressuscité - Victoire! - Pasteur Mohammed Sanogo",
+      thumbnail: "https://img.youtube.com/vi/9bAVZYrFUw8/maxresdefault.jpg",
     },
   ];
 
