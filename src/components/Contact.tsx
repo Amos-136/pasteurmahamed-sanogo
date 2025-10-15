@@ -186,14 +186,14 @@ const Contact = () => {
         {/* Interactive Map */}
         <div className="mt-16 rounded-3xl overflow-hidden border border-border shadow-lg">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3972.457798377395!2d-3.9918!3d5.3597!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNcKwMjEnMzUuMCJOIDPCsDU5JzMwLjUiVw!5e0!3m2!1sfr!2sci!4v1234567890"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15888.731770371984!2d-3.9945481024467564!3d5.389066613437968!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xfc1eb553c7e36d1%3A0x1c9994c7e7fe3412!2sEglise%20VASES%20D'HONNEUR%20-%20Centre%20Kodesh!5e0!3m2!1sfr!2sci!4v1760522785262!5m2!1sfr!2sci"
             width="100%"
             height="450"
             style={{ border: 0 }}
             allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="Localisation de l'Église Vases d'Honneur - Cocody 2 Plateaux-Vallons, Abidjan"
+            title="Localisation de l'Église Vases d'Honneur - Centre Kodesh, Cocody 2 Plateaux-Vallons, Abidjan"
             className="w-full"
           ></iframe>
           <div className="bg-card p-6 border-t border-border">
