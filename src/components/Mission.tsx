@@ -1,4 +1,4 @@
-import pastorImage from "@/assets/pastor-preaching.jpg";
+import pastorImage from "@/assets/pastor-mission.jpg";
 
 const Mission = () => {
   return (
