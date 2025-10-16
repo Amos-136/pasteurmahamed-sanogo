@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import choirImage from "@/assets/choir-worship.jpg";
 import churchImage from "@/assets/church-exterior.jpg";
 import eventKodesh from "@/assets/event-kodesh.jpg";
@@ -16,6 +18,8 @@ import audienceCloseup from "@/assets/audience-closeup.jpg";
 import pastorPreaching from "@/assets/pastor-preaching.jpg";
 
 const Gallery = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [showAll, setShowAll] = useState(false);
   const images = [
     {
       src: eventGodFirst,
@@ -115,11 +119,22 @@ const Gallery = () => {
     }
   ];
 
+  const featuredImages = images.slice(0, 5);
+  const displayImages = showAll ? images : featuredImages;
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % featuredImages.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + featuredImages.length) % featuredImages.length);
+  };
+
   return (
-    <section className="py-24 bg-background">
+    <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-12">
           <span className="inline-block text-primary font-semibold text-sm uppercase tracking-wider mb-4">
             Galerie Multimédia
           </span>
@@ -128,89 +143,111 @@ const Gallery = () => {
             <span className="text-gradient-royal">d'inspiration</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Découvrez nos cultes, événements et moments de transformation à travers l'image et la vidéo
+            Découvrez nos cultes, événements et moments de transformation
           </p>
         </div>
 
-        {/* Gallery Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {images.map((image, index) => (
+        {/* Featured Carousel */}
+        <div className="relative max-w-5xl mx-auto mb-12 rounded-3xl overflow-hidden shadow-2xl">
+          <div className="relative aspect-[16/9]">
+            <img
+              src={featuredImages[currentSlide].src}
+              alt={featuredImages[currentSlide].alt}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            
+            <div className="absolute bottom-0 left-0 right-0 p-8">
+              <span className="inline-block text-primary-glow text-sm font-semibold mb-2">
+                {featuredImages[currentSlide].category}
+              </span>
+              <h3 className="font-display text-3xl md:text-4xl font-bold text-white mb-2">
+                {featuredImages[currentSlide].title}
+              </h3>
+            </div>
+
+            <button
+              onClick={prevSlide}
+              className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 flex items-center justify-center transition-all"
+              aria-label="Image précédente"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+            
+            <button
+              onClick={nextSlide}
+              className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 flex items-center justify-center transition-all"
+              aria-label="Image suivante"
+            >
+              <ChevronRight className="w-6 h-6 text-white" />
+            </button>
+
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              {featuredImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`h-2 rounded-full transition-all ${
+                    index === currentSlide ? "w-8 bg-white" : "w-2 bg-white/50"
+                  }`}
+                  aria-label={`Aller à l'image ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Compact Grid */}
+        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${!showAll ? "mb-8" : ""}`}>
+          {displayImages.map((image, index) => (
             <div
               key={index}
-              className="group relative overflow-hidden rounded-2xl shadow-lg hover-lift cursor-pointer"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className="group relative overflow-hidden rounded-xl shadow-md hover-scale cursor-pointer aspect-square"
             >
-              <div className="aspect-[4/3] overflow-hidden">
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
+              <img
+                src={image.src}
+                alt={image.alt}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                <div>
+                  <span className="text-primary-glow text-xs font-semibold block mb-1">
+                    {image.category}
+                  </span>
+                  <h4 className="font-semibold text-white text-sm">
+                    {image.title}
+                  </h4>
+                </div>
               </div>
-              
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-secondary-dark via-secondary-dark/50 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-              
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col justify-end p-6">
-                <span className="inline-block text-primary-glow text-sm font-semibold mb-2">
-                  {image.category}
-                </span>
-                <h3 className="font-display text-2xl font-bold text-white transform translate-y-2 group-hover:translate-y-0 transition-transform">
-                  {image.title}
-                </h3>
-              </div>
-
-              {/* Hover Icon */}
-              <div className="absolute top-4 right-4 h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Expand className="w-5 h-5 text-white" />
               </div>
             </div>
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="text-center mt-12">
-          <a
-            href="https://www.vasesdhonneur.org/live"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-secondary hover:text-secondary-dark font-semibold text-lg transition-colors group"
-          >
-            Voir plus sur notre chaîne Live
-            <svg
-              className="w-5 h-5 group-hover:translate-x-1 transition-transform"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        {/* Show More/Less Button */}
+        {!showAll ? (
+          <div className="text-center">
+            <button
+              onClick={() => setShowAll(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-royal text-white rounded-xl shadow-royal hover:shadow-glow transition-all duration-300"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
-            </svg>
-          </a>
-        </div>
+              Voir toutes les photos ({images.length})
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        ) : (
+          <div className="text-center mt-8">
+            <button
+              onClick={() => setShowAll(false)}
+              className="inline-flex items-center gap-2 text-primary hover:text-primary-hover font-semibold transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              Voir moins
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
