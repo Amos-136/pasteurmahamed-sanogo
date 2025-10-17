@@ -5,6 +5,8 @@ import Impact from "@/components/Impact";
 import Testimonials from "@/components/Testimonials";
 import DailyMessage from "@/components/DailyMessage";
 import UpcomingPrograms from "@/components/UpcomingPrograms";
+import Newsletter from "@/components/Newsletter";
+import PrayerIntentions from "@/components/PrayerIntentions";
 import Gallery from "@/components/Gallery";
 import YouTubeVideos from "@/components/YouTubeVideos";
 import LiveMedia from "@/components/LiveMedia";
@@ -25,6 +27,8 @@ const Index = () => {
       <Testimonials />
       <DailyMessage />
       <UpcomingPrograms />
+      <Newsletter />
+      <PrayerIntentions />
       <Gallery />
       <YouTubeVideos />
       <LiveMedia />

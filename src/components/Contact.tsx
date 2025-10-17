@@ -2,7 +2,7 @@ import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Contact = () => {
   const { toast } = useToast();
@@ -20,22 +20,50 @@ const Contact = () => {
 
     try {
       const { error } = await supabase
-        .from("contact_messages")
-        .insert([formData]);
+        .from('contact_messages')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone || null,
+            message: formData.message,
+          },
+        ]);
 
       if (error) throw error;
 
+      // Send confirmation email
+      const { error: emailError } = await supabase.functions.invoke(
+        "send-thank-you-email",
+        {
+          body: { 
+            name: formData.name, 
+            email: formData.email, 
+            type: "contact" 
+          },
+        }
+      );
+
+      if (emailError) {
+        console.error("Email error:", emailError);
+      }
+
       toast({
         title: "Message envoyé !",
-        description: "Nous vous répondrons dans les plus brefs délais.",
+        description: "Nous vous répondrons dans les plus brefs délais. Vérifiez vos emails !",
       });
 
-      setFormData({ name: "", email: "", phone: "", message: "" });
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        message: "",
+      });
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error('Error submitting form:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'envoyer le message. Veuillez réessayer.",
+        description: "Une erreur est survenue. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {

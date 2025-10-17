@@ -2,3 +2,6 @@ project_id = "lnmtocadmfaiqvfobjyv"
 
 [functions.spiritual-chat]
 verify_jwt = false
+
+[functions.send-thank-you-email]
+verify_jwt = false
