@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,16 +12,93 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { sessionId, message } = await req.json();
+
+    if (!sessionId || typeof sessionId !== "string") {
+      return new Response(
+        JSON.stringify({ error: "Session invalide" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!message || typeof message !== "string") {
+      return new Response(
+        JSON.stringify({ error: "Message utilisateur manquant" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `Tu es VaseBot, l'assistant spirituel de l'Église Vases d'Honneur à Abidjan, Côte d'Ivoire, fondée par le Pasteur Mohammed Sanogo.
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Supabase credentials are not configured");
+    }
 
-MISSION: Accueillir chaleureusement les visiteurs et les guider spirituellement avec sagesse et compassion. Inspirer confiance, transparence et professionnalisme.
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    });
+
+    const { data: existingConversation, error: conversationError } = await supabase
+      .from("chat_conversations")
+      .select("id")
+      .eq("session_id", sessionId)
+      .maybeSingle();
+
+    if (conversationError && conversationError.code !== "PGRST116") {
+      console.error("Conversation lookup error", conversationError);
+      throw new Error("Impossible de récupérer la conversation");
+    }
+
+    let conversationId = existingConversation?.id;
+
+    if (!conversationId) {
+      const { data: newConversation, error: createConversationError } = await supabase
+        .from("chat_conversations")
+        .insert({ session_id: sessionId })
+        .select("id")
+        .single();
+
+      if (createConversationError || !newConversation) {
+        console.error("Conversation creation error", createConversationError);
+        throw new Error("Impossible de créer la conversation");
+      }
+
+      conversationId = newConversation.id;
+    }
+
+    const { error: userMessageError } = await supabase.from("chat_messages").insert({
+      conversation_id: conversationId,
+      role: "user",
+      content: message,
+    });
+
+    if (userMessageError) {
+      console.error("User message insert error", userMessageError);
+      throw new Error("Impossible d'enregistrer le message utilisateur");
+    }
+
+    const { data: history, error: historyError } = await supabase
+      .from("chat_messages")
+      .select("role, content")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+
+    if (historyError || !history) {
+      console.error("History fetch error", historyError);
+      throw new Error("Impossible de récupérer l'historique de conversation");
+    }
+
+    const systemPrompt = `Tu es VaseBot, l'assistant spirituel de l'Église Vases d'Honneur à Abidjan, Côte d'Ivoire, fondée par
+le Pasteur Mohammed Sanogo.
+
+MISSION: Accueillir chaleureusement les visiteurs et les guider spirituellement avec sagesse et compassion. Inspirer confiance,
+transparence et professionnalisme.
 
 AUTHENTICITÉ & PRÉSENCE RÉELLE:
 Ce portfolio créatif multimédia de l'Église Vases d'Honneur et du Pasteur Mohammed Sanogo repose sur une présence réelle et vérifiée.
@@ -95,7 +173,7 @@ IMPORTANT:
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...history.map((item) => ({ role: item.role, content: item.content })),
         ],
         stream: false,
       }),
@@ -121,6 +199,17 @@ IMPORTANT:
 
     const data = await response.json();
     const assistantMessage = data.choices[0].message.content;
+
+    const { error: assistantMessageError } = await supabase.from("chat_messages").insert({
+      conversation_id: conversationId,
+      role: "assistant",
+      content: assistantMessage,
+    });
+
+    if (assistantMessageError) {
+      console.error("Assistant message insert error", assistantMessageError);
+      throw new Error("Impossible d'enregistrer la réponse du chatbot");
+    }
 
     return new Response(
       JSON.stringify({ message: assistantMessage }),

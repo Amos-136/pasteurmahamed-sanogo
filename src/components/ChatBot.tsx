@@ -10,16 +10,17 @@ interface Message {
   content: string;
 }
 
+const DEFAULT_GREETING: Message = {
+  role: "assistant",
+  content: "Bonjour ! Je suis VaseBot 🙏 Comment puis-je vous aider aujourd'hui ?",
+};
+
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Bonjour ! Je suis VaseBot 🙏 Comment puis-je vous aider aujourd'hui ?",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -28,11 +29,34 @@ const ChatBot = () => {
   };
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const existingSessionId = localStorage.getItem("vasebot-session-id");
+    if (existingSessionId) {
+      setSessionId(existingSessionId);
+    } else {
+      const newSessionId = crypto.randomUUID();
+      localStorage.setItem("vasebot-session-id", newSessionId);
+      setSessionId(newSessionId);
+    }
+
+    const storedMessages = localStorage.getItem("vasebot-messages");
+    if (storedMessages) {
+      setMessages(JSON.parse(storedMessages));
+    } else {
+      setMessages([DEFAULT_GREETING]);
+    }
+  }, []);
+
+  useEffect(() => {
     scrollToBottom();
+    if (typeof window === "undefined") return;
+    if (messages.length === 0) return;
+    localStorage.setItem("vasebot-messages", JSON.stringify(messages));
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !sessionId) return;
 
     const userMessage: Message = { role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
@@ -41,7 +65,10 @@ const ChatBot = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("spiritual-chat", {
-        body: { messages: [...messages, userMessage] },
+        body: {
+          sessionId,
+          message: userMessage.content,
+        },
       });
 
       if (error) throw error;
@@ -151,7 +178,7 @@ const ChatBot = () => {
               />
               <Button
                 onClick={handleSend}
-                disabled={!input.trim() || isLoading}
+                disabled={!input.trim() || isLoading || !sessionId}
                 size="icon"
                 className="bg-gradient-divine hover:shadow-glow rounded-xl"
               >
