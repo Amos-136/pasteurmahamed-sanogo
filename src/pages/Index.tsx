@@ -2,6 +2,9 @@ import Hero from "@/components/Hero";
 import Mission from "@/components/Mission";
 import History from "@/components/History";
 import Impact from "@/components/Impact";
+import Testimonials from "@/components/Testimonials";
+import DailyMessage from "@/components/DailyMessage";
+import UpcomingPrograms from "@/components/UpcomingPrograms";
 import Gallery from "@/components/Gallery";
 import YouTubeVideos from "@/components/YouTubeVideos";
 import LiveMedia from "@/components/LiveMedia";
@@ -19,6 +22,9 @@ const Index = () => {
       <Mission />
       <History />
       <Impact />
+      <Testimonials />
+      <DailyMessage />
+      <UpcomingPrograms />
       <Gallery />
       <YouTubeVideos />
       <LiveMedia />
