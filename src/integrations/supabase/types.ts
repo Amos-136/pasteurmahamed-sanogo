@@ -91,6 +91,63 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscribers: {
+        Row: {
+          email: string
+          id: string
+          is_active: boolean | null
+          name: string | null
+          preferences: Json | null
+          subscribed_at: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          preferences?: Json | null
+          subscribed_at?: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          preferences?: Json | null
+          subscribed_at?: string
+        }
+        Relationships: []
+      }
+      prayer_intentions: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          intention: string
+          is_anonymous: boolean | null
+          name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          intention: string
+          is_anonymous?: boolean | null
+          name: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          intention?: string
+          is_anonymous?: boolean | null
+          name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       programs: {
         Row: {
           created_at: string
@@ -127,6 +184,51 @@ export type Database = {
           location?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          email: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean | null
+          name: string
+          phone: string | null
+          published_at: string | null
+          role: string | null
+          testimony: string
+          video_url: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean | null
+          name: string
+          phone?: string | null
+          published_at?: string | null
+          role?: string | null
+          testimony: string
+          video_url?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean | null
+          name?: string
+          phone?: string | null
+          published_at?: string | null
+          role?: string | null
+          testimony?: string
+          video_url?: string | null
         }
         Relationships: []
       }
