@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Heart, Send } from "lucide-react";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
@@ -8,48 +10,46 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Checkbox } from "./ui/checkbox";
 
+const prayerSchema = z.object({
+  name: z.string().trim().min(1, "Le nom est requis").max(100, "Le nom ne peut pas dépasser 100 caractères"),
+  email: z.string().trim().email("Adresse email invalide").max(255, "L'email ne peut pas dépasser 255 caractères").optional().or(z.literal('')),
+  intention: z.string().trim().min(1, "L'intention est requise").max(1000, "L'intention ne peut pas dépasser 1000 caractères"),
+  is_anonymous: z.boolean().default(false),
+});
+
+type PrayerFormData = z.infer<typeof prayerSchema>;
+
 const PrayerIntentions = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [intention, setIntention] = useState("");
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!intention || (!isAnonymous && !name)) {
-      toast({
-        title: "Champs requis",
-        description: "Veuillez remplir tous les champs obligatoires",
-        variant: "destructive",
-      });
-      return;
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<PrayerFormData>({
+    resolver: zodResolver(prayerSchema),
+    defaultValues: {
+      is_anonymous: false,
     }
+  });
+  const isAnonymous = watch("is_anonymous");
 
-    setLoading(true);
-
+  const onSubmit = async (data: PrayerFormData) => {
     try {
       const { error: dbError } = await supabase
         .from("prayer_intentions")
         .insert([
           {
-            name: isAnonymous ? "Anonyme" : name,
-            email: isAnonymous ? null : email,
-            intention,
-            is_anonymous: isAnonymous,
+            name: data.is_anonymous ? "Anonyme" : data.name,
+            email: data.is_anonymous ? null : (data.email || null),
+            intention: data.intention,
+            is_anonymous: data.is_anonymous,
           },
         ]);
 
       if (dbError) throw dbError;
 
       // Send confirmation email if email provided
-      if (email && !isAnonymous) {
+      if (data.email && !data.is_anonymous) {
         const { error: emailError } = await supabase.functions.invoke(
           "send-thank-you-email",
           {
-            body: { name, email, type: "prayer" },
+            body: { name: data.name, email: data.email, type: "prayer" },
           }
         );
 
@@ -63,10 +63,7 @@ const PrayerIntentions = () => {
         description: "Nous prierons pour vous. Dieu vous bénisse !",
       });
 
-      setName("");
-      setEmail("");
-      setIntention("");
-      setIsAnonymous(false);
+      reset();
     } catch (error) {
       console.error("Prayer intention error:", error);
       toast({
@@ -74,8 +71,6 @@ const PrayerIntentions = () => {
         description: "Une erreur est survenue. Veuillez réessayer.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -108,12 +103,12 @@ const PrayerIntentions = () => {
             transition={{ delay: 0.2 }}
             className="bg-card rounded-2xl p-8 shadow-xl border border-border"
           >
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Checkbox
                   id="anonymous"
                   checked={isAnonymous}
-                  onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
+                  onCheckedChange={(checked) => setValue("is_anonymous", checked as boolean)}
                 />
                 <label
                   htmlFor="anonymous"
@@ -127,33 +122,39 @@ const PrayerIntentions = () => {
                 <>
                   <div>
                     <Input
+                      {...register("name")}
                       type="text"
                       placeholder="Votre nom *"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required={!isAnonymous}
+                      className={errors.name ? "border-destructive" : ""}
                     />
+                    {errors.name && (
+                      <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+                    )}
                   </div>
                   <div>
                     <Input
+                      {...register("email")}
                       type="email"
                       placeholder="Votre email (optionnel)"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      className={errors.email ? "border-destructive" : ""}
                     />
+                    {errors.email && (
+                      <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+                    )}
                   </div>
                 </>
               )}
 
               <div>
                 <Textarea
+                  {...register("intention")}
                   placeholder="Partagez votre intention de prière... *"
-                  value={intention}
-                  onChange={(e) => setIntention(e.target.value)}
                   rows={6}
-                  required
-                  className="resize-none"
+                  className={`resize-none ${errors.intention ? "border-destructive" : ""}`}
                 />
+                {errors.intention && (
+                  <p className="text-sm text-destructive mt-1">{errors.intention.message}</p>
+                )}
               </div>
 
               <div className="bg-secondary/20 rounded-lg p-4">
@@ -164,10 +165,10 @@ const PrayerIntentions = () => {
 
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 className="w-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-divine transition-all"
               >
-                {loading ? (
+                {isSubmitting ? (
                   "Envoi en cours..."
                 ) : (
                   <>

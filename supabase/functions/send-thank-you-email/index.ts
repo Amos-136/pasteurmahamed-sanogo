@@ -14,6 +14,20 @@ interface EmailRequest {
   type: "contact" | "newsletter" | "prayer" | "testimony";
 }
 
+// Validation functions
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 255;
+};
+
+const isValidName = (name: string): boolean => {
+  return name.trim().length > 0 && name.length <= 100;
+};
+
+const isValidType = (type: string): boolean => {
+  return ['contact', 'newsletter', 'prayer', 'testimony'].includes(type);
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -23,7 +37,7 @@ const handler = async (req: Request): Promise<Response> => {
     const body = await req.json();
     const { name, email, type } = body as EmailRequest;
 
-    // Basic validation
+    // Validation
     if (!name || !email || !type) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: name, email, type" }),
@@ -34,11 +48,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!isValidName(name)) {
       return new Response(
-        JSON.stringify({ error: "Invalid email format" }),
+        JSON.stringify({ error: "Invalid name (max 100 characters)" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -46,10 +58,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Name length validation
-    if (name.length > 100) {
+    if (!isValidEmail(email)) {
       return new Response(
-        JSON.stringify({ error: "Name too long (max 100 characters)" }),
+        JSON.stringify({ error: "Invalid email format or too long (max 255 characters)" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -57,7 +68,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Sending ${type} email to ${email}`);
+    if (!isValidType(type)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid type. Must be one of: contact, newsletter, prayer, testimony" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Sanitize inputs
+    const sanitizedName = name.trim();
+    const sanitizedEmail = email.trim().toLowerCase();
+
+    console.log(`Sending ${type} email to ${sanitizedEmail}`);
 
     let subject = "";
     let html = "";
@@ -72,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p style="color: white; margin: 10px 0 0 0;">Église Internationale</p>
             </div>
             <div style="padding: 30px; background-color: #ffffff;">
-              <h2 style="color: #333;">Cher(e) ${name},</h2>
+              <h2 style="color: #333;">Cher(e) ${sanitizedName},</h2>
               <p style="color: #666; line-height: 1.6;">
                 Nous avons bien reçu votre message et vous en remercions sincèrement.
               </p>
@@ -103,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
               <h1 style="color: white; margin: 0;">Bienvenue !</h1>
             </div>
             <div style="padding: 30px; background-color: #ffffff;">
-              <h2 style="color: #333;">Cher(e) ${name},</h2>
+              <h2 style="color: #333;">Cher(e) ${sanitizedName},</h2>
               <p style="color: #666; line-height: 1.6;">
                 Merci de vous être inscrit(e) à notre newsletter ! Vous recevrez désormais :
               </p>
@@ -129,7 +154,7 @@ const handler = async (req: Request): Promise<Response> => {
               <h1 style="color: white; margin: 0;">🙏 Prière</h1>
             </div>
             <div style="padding: 30px; background-color: #ffffff;">
-              <h2 style="color: #333;">Cher(e) ${name},</h2>
+              <h2 style="color: #333;">Cher(e) ${sanitizedName},</h2>
               <p style="color: #666; line-height: 1.6;">
                 Merci d'avoir partagé votre intention de prière avec nous.
               </p>
@@ -153,7 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
               <h1 style="color: white; margin: 0;">✨ Témoignage</h1>
             </div>
             <div style="padding: 30px; background-color: #ffffff;">
-              <h2 style="color: #333;">Cher(e) ${name},</h2>
+              <h2 style="color: #333;">Cher(e) ${sanitizedName},</h2>
               <p style="color: #666; line-height: 1.6;">
                 Merci d'avoir partagé votre témoignage avec nous !
               </p>
@@ -171,7 +196,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Vases d'Honneur <onboarding@resend.dev>",
-      to: [email],
+      to: [sanitizedEmail],
       subject: subject,
       html: html,
     });

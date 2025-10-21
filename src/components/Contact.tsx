@@ -1,32 +1,36 @@
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Le nom est requis").max(100, "Le nom ne peut pas dépasser 100 caractères"),
+  email: z.string().trim().email("Adresse email invalide").max(255, "L'email ne peut pas dépasser 255 caractères"),
+  phone: z.string().trim().max(20, "Le numéro ne peut pas dépasser 20 caractères").optional(),
+  message: z.string().trim().min(1, "Le message est requis").max(1000, "Le message ne peut pas dépasser 1000 caractères"),
+});
+
+type ContactFormData = z.infer<typeof contactSchema>;
+
 const Contact = () => {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  const onSubmit = async (data: ContactFormData) => {
     try {
       const { error } = await supabase
         .from('contact_messages')
         .insert([
           {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone || null,
-            message: formData.message,
+            name: data.name,
+            email: data.email,
+            phone: data.phone || null,
+            message: data.message,
           },
         ]);
 
@@ -37,8 +41,8 @@ const Contact = () => {
         "send-thank-you-email",
         {
           body: { 
-            name: formData.name, 
-            email: formData.email, 
+            name: data.name, 
+            email: data.email, 
             type: "contact" 
           },
         }
@@ -53,12 +57,7 @@ const Contact = () => {
         description: "Nous vous répondrons dans les plus brefs délais. Vérifiez vos emails !",
       });
 
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        message: "",
-      });
+      reset();
     } catch (error) {
       console.error('Error submitting form:', error);
       toast({
@@ -66,8 +65,6 @@ const Contact = () => {
         description: "Une erreur est survenue. Veuillez réessayer.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -139,20 +136,20 @@ const Contact = () => {
               Envoyez-nous un message
             </h3>
             
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
                   Nom complet
                 </label>
                 <input
-                  type="text"
+                  {...register("name")}
                   id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-input bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  className={`w-full px-4 py-3 rounded-xl border ${errors.name ? 'border-destructive' : 'border-input'} bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all`}
                   placeholder="Votre nom"
                 />
+                {errors.name && (
+                  <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+                )}
               </div>
 
               <div>
@@ -160,14 +157,15 @@ const Contact = () => {
                   Email
                 </label>
                 <input
+                  {...register("email")}
                   type="email"
                   id="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-input bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  className={`w-full px-4 py-3 rounded-xl border ${errors.email ? 'border-destructive' : 'border-input'} bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all`}
                   placeholder="votre@email.com"
                 />
+                {errors.email && (
+                  <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+                )}
               </div>
 
               <div>
@@ -175,13 +173,15 @@ const Contact = () => {
                   Téléphone
                 </label>
                 <input
+                  {...register("phone")}
                   type="tel"
                   id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-input bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  className={`w-full px-4 py-3 rounded-xl border ${errors.phone ? 'border-destructive' : 'border-input'} bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all`}
                   placeholder="+225 XX XX XX XX XX"
                 />
+                {errors.phone && (
+                  <p className="text-sm text-destructive mt-1">{errors.phone.message}</p>
+                )}
               </div>
 
               <div>
@@ -189,14 +189,15 @@ const Contact = () => {
                   Message
                 </label>
                 <textarea
+                  {...register("message")}
                   id="message"
                   rows={4}
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-input bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                  className={`w-full px-4 py-3 rounded-xl border ${errors.message ? 'border-destructive' : 'border-input'} bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none`}
                   placeholder="Partagez votre message..."
                 />
+                {errors.message && (
+                  <p className="text-sm text-destructive mt-1">{errors.message.message}</p>
+                )}
               </div>
 
               <Button 

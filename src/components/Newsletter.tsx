@@ -1,36 +1,32 @@
 import { motion } from "framer-motion";
 import { Mail, Send } from "lucide-react";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
+const newsletterSchema = z.object({
+  name: z.string().trim().min(1, "Le nom est requis").max(100, "Le nom ne peut pas dépasser 100 caractères"),
+  email: z.string().trim().email("Adresse email invalide").max(255, "L'email ne peut pas dépasser 255 caractères"),
+});
+
+type NewsletterFormData = z.infer<typeof newsletterSchema>;
+
 const Newsletter = () => {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<NewsletterFormData>({
+    resolver: zodResolver(newsletterSchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !name) {
-      toast({
-        title: "Champs requis",
-        description: "Veuillez remplir tous les champs",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-
+  const onSubmit = async (data: NewsletterFormData) => {
     try {
       // Insert into database
       const { error: dbError } = await supabase
         .from("newsletter_subscribers")
-        .insert([{ email, name }]);
+        .insert([{ email: data.email, name: data.name }]);
 
       if (dbError) {
         if (dbError.code === "23505") {
@@ -48,7 +44,7 @@ const Newsletter = () => {
       const { error: emailError } = await supabase.functions.invoke(
         "send-thank-you-email",
         {
-          body: { name, email, type: "newsletter" },
+          body: { name: data.name, email: data.email, type: "newsletter" },
         }
       );
 
@@ -61,8 +57,7 @@ const Newsletter = () => {
         description: "Vous recevrez bientôt nos actualités. Vérifiez vos emails !",
       });
 
-      setEmail("");
-      setName("");
+      reset();
     } catch (error) {
       console.error("Newsletter error:", error);
       toast({
@@ -70,8 +65,6 @@ const Newsletter = () => {
         description: "Une erreur est survenue. Veuillez réessayer.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -99,7 +92,7 @@ const Newsletter = () => {
           </p>
 
           <motion.form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-border"
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -107,30 +100,36 @@ const Newsletter = () => {
             transition={{ delay: 0.2 }}
           >
             <div className="space-y-4 mb-6">
-              <Input
-                type="text"
-                placeholder="Votre nom"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full"
-                required
-              />
-              <Input
-                type="email"
-                placeholder="Votre adresse email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full"
-                required
-              />
+              <div>
+                <Input
+                  {...register("name")}
+                  type="text"
+                  placeholder="Votre nom"
+                  className={errors.name ? "border-destructive" : ""}
+                />
+                {errors.name && (
+                  <p className="text-sm text-destructive mt-1 text-left">{errors.name.message}</p>
+                )}
+              </div>
+              <div>
+                <Input
+                  {...register("email")}
+                  type="email"
+                  placeholder="Votre adresse email"
+                  className={errors.email ? "border-destructive" : ""}
+                />
+                {errors.email && (
+                  <p className="text-sm text-destructive mt-1 text-left">{errors.email.message}</p>
+                )}
+              </div>
             </div>
 
             <Button
               type="submit"
-              disabled={loading}
+              disabled={isSubmitting}
               className="w-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-divine transition-all"
             >
-              {loading ? (
+              {isSubmitting ? (
                 "Inscription en cours..."
               ) : (
                 <>
