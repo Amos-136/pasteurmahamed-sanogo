@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "resend";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -20,7 +20,42 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, type }: EmailRequest = await req.json();
+    const body = await req.json();
+    const { name, email, type } = body as EmailRequest;
+
+    // Basic validation
+    if (!name || !email || !type) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: name, email, type" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email format" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Name length validation
+    if (name.length > 100) {
+      return new Response(
+        JSON.stringify({ error: "Name too long (max 100 characters)" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     console.log(`Sending ${type} email to ${email}`);
 

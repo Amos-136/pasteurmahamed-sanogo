@@ -1,8 +1,0 @@
-{
-  "imports": {
-    "resend": "npm:resend@3.2.0"
-  },
-  "compilerOptions": {
-    "types": ["npm:@types/node"]
-  }
-}
