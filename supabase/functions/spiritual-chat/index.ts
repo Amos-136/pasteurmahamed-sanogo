@@ -14,6 +14,7 @@ serve(async (req) => {
   try {
     const { sessionId, message } = await req.json();
 
+    // Validate sessionId
     if (!sessionId || typeof sessionId !== "string") {
       return new Response(
         JSON.stringify({ error: "Session invalide" }),
@@ -21,11 +22,37 @@ serve(async (req) => {
       );
     }
 
+    // Validate message type
     if (!message || typeof message !== "string") {
       return new Response(
         JSON.stringify({ error: "Message utilisateur manquant" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Validate message length and sanitize
+    const trimmedMessage = message.trim();
+
+    if (trimmedMessage.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Le message ne peut pas être vide" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (trimmedMessage.length > 2000) {
+      return new Response(
+        JSON.stringify({ error: "Le message ne peut pas dépasser 2000 caractères" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Remove dangerous control characters
+    const sanitizedMessage = trimmedMessage.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+    // Log warning for long messages (monitoring)
+    if (sanitizedMessage.length > 1000) {
+      console.warn(`Long message detected: ${sanitizedMessage.length} chars from session ${sessionId}`);
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -75,7 +102,7 @@ serve(async (req) => {
     const { error: userMessageError } = await supabase.from("chat_messages").insert({
       conversation_id: conversationId,
       role: "user",
-      content: message,
+      content: sanitizedMessage,
     });
 
     if (userMessageError) {
@@ -87,7 +114,8 @@ serve(async (req) => {
       .from("chat_messages")
       .select("role, content")
       .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .limit(100); // Limit history to prevent excessive token usage
 
     if (historyError || !history) {
       console.error("History fetch error", historyError);
@@ -163,6 +191,9 @@ IMPORTANT:
 - Pour les questions complexes, suggère de contacter directement le Pasteur Mohammed Sanogo
 - Réponds en français principalement, mais adapte-toi à la langue du visiteur`;
 
+    // Limit to last 50 messages to prevent excessive context length
+    const recentHistory = history.slice(-50);
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -173,7 +204,7 @@ IMPORTANT:
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          ...history.map((item) => ({ role: item.role, content: item.content })),
+          ...recentHistory.map((item) => ({ role: item.role, content: item.content })),
         ],
         stream: false,
       }),
