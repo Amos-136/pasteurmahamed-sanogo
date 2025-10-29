@@ -55,6 +55,7 @@ serve(async (req) => {
       console.warn(`Long message detected: ${sanitizedMessage.length} chars from session ${sessionId}`);
     }
 
+    // Initialize environment variables and Supabase client first
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -70,6 +71,73 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { persistSession: false },
     });
+
+    // Rate limiting configuration
+    const RATE_LIMIT = 10; // messages per window
+    const WINDOW_MINUTES = 1; // 1 minute window
+
+    // Check rate limit
+    const { data: rateData, error: rateFetchError } = await supabase
+      .from('chat_rate_limits')
+      .select('*')
+      .eq('session_id', sessionId)
+      .maybeSingle();
+
+    if (rateFetchError && rateFetchError.code !== 'PGRST116') {
+      console.error('Rate limit check error:', rateFetchError);
+    }
+
+    if (rateData) {
+      const now = new Date();
+      const windowStart = new Date(rateData.window_start);
+      const windowAgeMinutes = (now.getTime() - windowStart.getTime()) / 1000 / 60;
+      
+      if (windowAgeMinutes < WINDOW_MINUTES) {
+        if (rateData.request_count >= RATE_LIMIT) {
+          const secondsRemaining = Math.ceil((WINDOW_MINUTES * 60) - (windowAgeMinutes * 60));
+          console.warn(`Rate limit exceeded: session=${sessionId}, count=${rateData.request_count}`);
+          return new Response(
+            JSON.stringify({ 
+              error: `Trop de messages. Veuillez patienter ${secondsRemaining} secondes.`,
+              retryAfter: secondsRemaining
+            }),
+            { 
+              status: 429, 
+              headers: { 
+                ...corsHeaders, 
+                'Content-Type': 'application/json',
+                'Retry-After': secondsRemaining.toString()
+              } 
+            }
+          );
+        }
+        
+        // Increment counter within same window
+        await supabase
+          .from('chat_rate_limits')
+          .update({ 
+            request_count: rateData.request_count + 1,
+            last_request: now.toISOString()
+          })
+          .eq('session_id', sessionId);
+      } else {
+        // Window expired, reset counter
+        await supabase
+          .from('chat_rate_limits')
+          .update({ 
+            request_count: 1,
+            window_start: now.toISOString(),
+            last_request: now.toISOString()
+          })
+          .eq('session_id', sessionId);
+      }
+    } else {
+      // First request from this session
+      await supabase.from('chat_rate_limits').insert({
+        session_id: sessionId,
+        request_count: 1
+      });
+    }
 
     const { data: existingConversation, error: conversationError } = await supabase
       .from("chat_conversations")
